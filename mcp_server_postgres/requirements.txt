@@ -1,0 +1,7 @@
+modelcontextprotocol
+psycopg2-binary
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+python-dotenv

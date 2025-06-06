@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env.*
+! .env # We want to include the .env file if it's generic for the container
+        # If it contains secrets, it should NOT be copied.
+        # For this setup, we assume .env provides the DATABASE_URL for the container.
+        # Production setups might use Docker secrets or environment variables passed at runtime.
+
+.pytest_cache/
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Docker files
+Dockerfile
+.dockerignore
