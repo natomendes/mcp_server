@@ -1,0 +1,5 @@
+node_modules
+dist
+.env
+/mcp-rag-server/node_modules
+/mcp-rag-server/dist
