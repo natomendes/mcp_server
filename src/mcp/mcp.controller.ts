@@ -34,7 +34,7 @@ export class McpController implements OnModuleInit {
       await this.mcpServer.connect(this.transport);
       this.logger.log('McpController: MCP Server successfully connected to StreamableHTTPServerTransport.');
     } catch (error) {
-      this.logger.error('McpController: Failed to connect MCP Server to StreamableHTTPServerTransport.', error.stack);
+      this.logger.error('McpController: Failed to connect MCP Server to StreamableHTTPServerTransport.', (error instanceof Error ? error.stack : String(error)));
       // Depending on the application's needs, you might want to throw this error further
       // or implement a retry mechanism. For now, logging the error is crucial.
     }
@@ -52,7 +52,7 @@ export class McpController implements OnModuleInit {
       // req.body is assumed to be parsed by NestJS (e.g., using express.json middleware)
       await this.transport.handleRequest(req, res, req.body);
     } catch (error) {
-      this.logger.error(`McpController: Error during POST /mcp this.transport.handleRequest. Error: ${error.message}`, error.stack);
+      this.logger.error(`McpController: Error during POST /mcp this.transport.handleRequest. Error: ${error instanceof Error ? error.message : String(error)}`, (error instanceof Error ? error.stack : String(error)));
       // This catch block might only catch synchronous errors if handleRequest itself throws.
       // Most errors within the MCP flow are handled by the transport and sent as JSON-RPC error responses.
       if (!res.headersSent) {
@@ -71,7 +71,7 @@ export class McpController implements OnModuleInit {
     try {
       await this.transport.handleRequest(req, res);
     } catch (error) {
-      this.logger.error(`McpController: Error during GET /mcp this.transport.handleRequest. Error: ${error.message}`, error.stack);
+      this.logger.error(`McpController: Error during GET /mcp this.transport.handleRequest. Error: ${error instanceof Error ? error.message : String(error)}`, (error instanceof Error ? error.stack : String(error)));
       if (!res.headersSent) {
         res.status(500).send({ error: 'Internal server error processing MCP request.' });
       }
@@ -88,7 +88,7 @@ export class McpController implements OnModuleInit {
     try {
       await this.transport.handleRequest(req, res);
     } catch (error) {
-      this.logger.error(`McpController: Error during DELETE /mcp this.transport.handleRequest. Error: ${error.message}`, error.stack);
+      this.logger.error(`McpController: Error during DELETE /mcp this.transport.handleRequest. Error: ${error instanceof Error ? error.message : String(error)}`, (error instanceof Error ? error.stack : String(error)));
       if (!res.headersSent) {
         res.status(500).send({ error: 'Internal server error processing MCP request.' });
       }
