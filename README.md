@@ -1,98 +1,126 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# MCP RAG Server (NestJS & PostgreSQL)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project implements a Model Context Protocol (MCP) server using the NestJS framework. It features a Retrieval Augmented Generation (RAG) system that leverages a PostgreSQL database to provide context to Large Language Models (LLMs).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The primary purpose of this server is to expose standardized ways for an LLM to utilize context retrieved from the RAG system when formulating its answers.
 
-## Description
+## Prerequisites
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Before you begin, ensure you have the following installed:
 
-## Project setup
+- **Node.js**: Version `22.14.0` (as specified in `package.json`). It's recommended to use a Node version manager like `nvm` to manage Node versions.
+- **Yarn**: The project uses Yarn as its package manager. Installation guide: [https://classic.yarnpkg.com/en/docs/install](https://classic.yarnpkg.com/en/docs/install)
+- **PostgreSQL**: A running PostgreSQL server instance.
+
+## Setup Instructions
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone <repository_url>
+    cd <repository_name>
+    ```
+
+2.  **Database Setup:**
+    The project includes a SQL script `init_db.sql` to set up the necessary database and table.
+    -   **Create the database and table:** Execute the script against your PostgreSQL instance.
+        ```bash
+        # Example using psql (you might need to adjust connection parameters)
+        psql -U your_postgres_user -f init_db.sql
+        ```
+        This script will:
+        - Create a database named `mcp_rag_db`.
+        - Connect to `mcp_rag_db` and create a table named `documents` with columns for `id`, `content`, and `vector`.
+
+3.  **Environment Configuration (Database Connection):**
+    The PostgreSQL connection details in `src/rag.service.ts` are currently placeholders:
+    ```typescript
+    // src/rag.service.ts - inside the constructor
+    this.pool = new Pool({
+      user: 'your_db_user', // TODO: Configure
+      host: 'localhost',    // TODO: Configure
+      database: 'mcp_rag_db', // TODO: Configure
+      password: 'your_db_password', // TODO: Configure
+      port: 5432,         // TODO: Configure
+    });
+    ```
+    You **must** update these placeholders with your actual PostgreSQL connection details. For a production setup, it's highly recommended to use environment variables (e.g., via NestJS ConfigModule and a `.env` file) instead of hardcoding credentials.
+
+4.  **Install Dependencies:**
+    Navigate to the project root and install dependencies using Yarn:
+    ```bash
+    yarn install
+    ```
+    If you encounter issues related to Node.js engine version during installation, ensure your active Node.js version is `22.14.0`. The project is configured with `engine-strict=true`.
+
+## Running the Application
+
+NestJS offers several ways to run the application:
+
+-   **Development Mode (with watch):**
+    ```bash
+    yarn start
+    ```
+    This command starts the server in development mode with file watching. Changes to your code will automatically trigger a rebuild and restart.
+
+-   **Production Mode:**
+    First, build the application:
+    ```bash
+    yarn build
+    ```
+    Then, run the production build:
+    ```bash
+    yarn start:prod
+    ```
+
+By default, the server will run on `http://localhost:3000`.
+
+## MCP Server Details
+
+-   **MCP Endpoint:** The server exposes its MCP functionalities at the following endpoint:
+    `POST/GET/DELETE http://localhost:3000/mcp`
+
+-   **Exposed Resource:**
+    -   **Name:** `rag_context`
+    -   **URI Template:** `rag://query/{queryString}`
+    -   **Description:** This resource retrieves relevant documents from the PostgreSQL RAG based on the provided `queryString`. The current implementation fetches all documents as a placeholder for actual vector search.
+    -   **Example Usage (conceptual):** An MCP client could read `rag://query/what is NestJS` to get context about NestJS.
+
+-   **Exposed Tool:**
+    -   **Name:** `get_rag_prompt`
+    -   **Input Schema:** `{ "query": "string" }`
+    -   **Description:** This tool takes a user's `query`, fetches relevant context from the RAG (similar to the `rag_context` resource), and then constructs a formatted prompt string ready to be sent to an LLM. The prompt combines the retrieved context with the original user query.
+    -   **Example Usage (conceptual):** An MCP client could call the `get_rag_prompt` tool with `{"query": "Explain MCP in simple terms"}`. The tool would return a string like: `"Context: [Retrieved documents about MCP...]
+
+Query: Explain MCP in simple terms"`.
+
+## Running Tests
+
+To run the unit tests:
 
 ```bash
-$ npm install
+yarn test
 ```
 
-## Compile and run the project
+This command will execute all `*.spec.ts` files in the project using Jest.
+
+## Building the Application
+
+To create a production build of the application:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+yarn build
 ```
+This will generate a `dist` folder containing the compiled JavaScript code.
 
-## Run tests
+## Populating the RAG (Important Note)
 
-```bash
-# unit tests
-$ npm run test
+The RAG system provided in this project includes the mechanism for retrieving documents from the `documents` table in PostgreSQL. However, this table will be **empty** after running `init_db.sql`.
 
-# e2e tests
-$ npm run test:e2e
+To make the RAG useful, you will need to:
+1.  **Add Documents:** Populate the `documents` table with your text data.
+2.  **Implement Vectorization:** The current schema includes a `vector` column (as TEXT). For actual RAG functionality, you would typically:
+    -   Generate vector embeddings for your document content using a sentence transformer model or similar.
+    -   Store these vectors in the `vector` column (ideally using a specialized vector type if using PostgreSQL extensions like `pgvector`).
+    -   Update the `RagService` to perform vector similarity searches instead of fetching all documents.
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project provides the foundational MCP server and RAG retrieval structure. The content ingestion and vector search implementation are considered separate concerns.
