@@ -1,3 +1,14 @@
 node_modules
 dist
 .env
+
+# NPM lock file (to be ignored as we are using Yarn)
+package-lock.json
+
+# Yarn specific
+yarn-error.log
+# yarn.lock should NOT be ignored
+
+# Note: If using Yarn Berry (v2+), other files like .yarn/* and .pnp.* might be
+# ignored too (with specific !.yarn/xxx exclusions).
+# For Yarn 1.x (classic), yarn.lock is tracked and yarn-error.log is ignored.
